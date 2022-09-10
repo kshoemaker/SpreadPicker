@@ -61,12 +61,13 @@ get_each_spread <- function(picks){
 
 ### Random Walk Section
 
-reps = 100
+reps = 50
 team_matrix <- team_nums <- vector(length = 18)
 seed_trace <- vector(length = reps)
+seeds <- sample(1:100000, size = reps)
 
 for (s in 1:reps){
-  set.seed(s*17)
+  set.seed(seeds[s])
   
   # Start with a viable pick
   ## Change line 59, 74, 80
@@ -78,7 +79,7 @@ for (s in 1:reps){
   
   current_pick <- random_start
   current_spread <- get_spread(random_start)
-  iters <- 2500
+  iters <- 4000
   trace <- vector(length = iters)
   
   for (i in 1:iters){
@@ -123,7 +124,6 @@ for (s in 1:reps){
   
 
 table(seed_trace)
-library(tidyverse)
 team_matrix_tbl <- as_tibble(team_matrix)
 team_matrix_tbl$score <- seed_trace
 #team_matrix <- cbind()
@@ -132,3 +132,4 @@ table(team_matrix_tbl$score)
 ranked <- team_matrix_tbl %>% select(score, everything()) %>%  arrange(desc(score))
 # top_picks <- team_matrix[order(seed_trace, decreasing = T)[1:50], ]
 apply(team_matrix_tbl, 2, table)
+write_csv(ranked, "resultsWeek1.csv", append = T)
