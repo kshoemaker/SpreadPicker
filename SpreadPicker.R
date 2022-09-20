@@ -11,9 +11,9 @@ latest_season$week <- c(rep(1,16),rep(2,16),rep(3,16),rep(4,16),rep(5,16),rep(6,
                         rep(13,15),rep(14,13),rep(15,16),rep(16,16),rep(17,16),rep(18,16))
 
 current_week <- 2
-current_teams <- c("TEN")
-current_picks <- c(13)
-available <- c(1:12, 14:32)
+current_teams <- c("WSH")
+current_picks <- c(9)
+available <- c(1:8, 10:32)
 
 # Combines Team1 and Team2 data into one data frame
 TEAM1 <- latest_season %>% select(week,team1,qbelo_prob1) %>% 
@@ -139,4 +139,4 @@ ranked <- team_matrix_tbl %>% select(score, everything()) %>%  arrange(desc(scor
 ranked
 # top_picks <- team_matrix[order(seed_trace, decreasing = T)[1:50], ]
 apply(team_matrix_tbl, 2, table)
-write_csv(ranked, paste0("resultsWeek",current_week, ".csv"), append = T)
+write_csv(ranked, paste0("resultsWeek",current_week, "_WSH_w1.csv"), append = T)
