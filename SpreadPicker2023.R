@@ -1,31 +1,14 @@
 
-# spread_data <- read.csv("/Users/Kate/Documents/FootballThings/Spreads.csv", row.names = 1, na.strings = "-",header = F, stringsAsFactors = F)
-# data <- read.csv("/Users/Kate/Documents/FootballThings/Spreads2.csv",  row.names = 1, na.strings = "-",header = F, stringsAsFactors = F)
 library(tidyverse)
 
-# code from CLD to get the data setup right. 
-latest_season <- read_csv("https://projects.fivethirtyeight.com/nfl-api/nfl_elo_latest.csv")
-latest_season <- latest_season %>% filter(is.na(playoff))
-latest_season$week <- c(rep(1,16),rep(2,16),rep(3,16),rep(4,16),rep(5,16),rep(6,14),
-                        rep(7,14),rep(8,15),rep(9,13),rep(10,14),rep(11,14),rep(12,16),
-                        rep(13,15),rep(14,13),rep(15,16),rep(16,16),rep(17,16),rep(18,16))
+data <- read.csv("Data2023/Week1.csv", row.names = 1)
+teams <- row.names(data)
 
-
-# Combines Team1 and Team2 data into one data frame
-TEAM1 <- latest_season %>% select(week,team1,qbelo_prob1) %>% 
-  rename(team = team1) %>% rename(weekly_prob =  qbelo_prob1)
-TEAM2 <- latest_season %>% select(week,team2,qbelo_prob2) %>% 
-  rename(team = team2) %>% rename(weekly_prob =  qbelo_prob2)
-ALL_WEEKS <- rbind(TEAM1,TEAM2) %>% arrange(week)
-data <- pivot_wider(ALL_WEEKS, names_from = week, values_from = weekly_prob)
-team <- data$team
-data <- data[,-1]
-#write.csv(data, paste0("week",current_week,"data.csv"))
-
-current_week <- 4
-current_teams <- c("TEN", "LAR", "CHI")
-current_picks <- c(which(team == "TEN"), which(team == "LAR"), which(team == "CHI"))
-available <- c(1:32)[-current_picks]
+current_week <- 1
+current_teams <- c()
+current_picks <- c()
+available <- c(1:32)
+#available <- c(1:32)[-current_picks]
 
 ### Function Section 
 get_spread <- function(picks){
@@ -68,21 +51,22 @@ get_each_spread <- function(picks){
 
 ### Random Walk Section
 
-reps = 50
+reps = 100
 team_matrix <- team_nums <- vector(length = 18)
 seed_trace <- vector(length = reps)
 seeds <- sample(1:100000, size = reps)
 
 for (s in 1:reps){
+  # set the seed
   set.seed(seeds[s])
   
-  # Start with a viable pick
-  ## Change line 59, 74, 80
-  
+
   check = -1000
   while(check == -1000){
     random_start <- c(current_picks, sample(available, 18 - (current_week-1)))
-    check <- get_spread(random_start)}
+    check <- get_spread(random_start)
+    }
+  
   
   current_pick <- random_start
   current_spread <- get_spread(random_start)
@@ -102,10 +86,11 @@ for (s in 1:reps){
       new_pick[new_week] <- new_team
     } else {
       # swap
-      swap_weeks <- sample(current_week:18,2, replace = F)
+      swap_weeks <- sample(current_week:18, 2, replace = F)
       new_pick[swap_weeks[1]] <- current_pick[swap_weeks[2]]
       new_pick[swap_weeks[2]] <- current_pick[swap_weeks[1]]
     }
+    
     # compare 
     new_spread <- get_spread(new_pick)
     
@@ -115,16 +100,15 @@ for (s in 1:reps){
       current_spread <- new_spread
     } 
     
-    trace[i] <- current_spread[1,1]
+    trace[i] <- current_spread
   }
   
-  tail(trace, 20)
   plot(trace, type = "l")
   
-  team_matrix <- rbind(team_matrix, team[current_pick])
+  team_matrix <- rbind(team_matrix, teams[current_pick])
   team_nums <- rbind(team_nums, current_pick)
   seed_trace[s] <- trace[iters]
-  print(paste0("Prob: ", round(seed_trace[s],3), "; Seed ", s, ": ", paste(team[current_pick], collapse = ", ") ))
+  print(paste0("Prob: ", round(seed_trace[s],3), "; Seed ", s, ": ", paste(teams[current_pick], collapse = ", ") ))
 }
 
  team_matrix <- team_matrix[-1, ]
@@ -140,5 +124,4 @@ ranked <- team_matrix_tbl %>% select(score, everything()) %>%  arrange(desc(scor
 ranked
 # top_picks <- team_matrix[order(seed_trace, decreasing = T)[1:50], ]
 apply(team_matrix_tbl, 2, table)
-#write_csv(ranked, paste0("resultsWeek",current_week, "_WSH_w1.csv"), append = T)
-write_csv(ranked, paste0("resultsWeek",current_week, "_TEN_w1.csv"), append = T)
+write_csv(ranked, paste0("Data2023/resultsWeek",current_week, ".csv"), append = T)
